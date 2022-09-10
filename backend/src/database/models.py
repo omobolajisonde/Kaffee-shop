@@ -19,6 +19,11 @@ def setup_db(app):
     db.app = app
     db.init_app(app)
 
+def rollback_db():
+    db.session.rollback()
+def close_db():
+    db.session.close()
+
 
 '''
 db_drop_and_create_all()
