@@ -9,7 +9,15 @@ from auth.auth import AuthError, requires_auth
 
 app = Flask(__name__)
 setup_db(app)
-CORS(app)
+CORS(app, origins=["*"])
+
+@app.after_request
+def after_request(response):
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization, true")
+    response.headers.add("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS")
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
 
 '''
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
@@ -24,7 +32,7 @@ CORS(app)
 
 @app.route("/drinks", methods=["GET"])
 @requires_auth("get:drinks")
-def get_drinks():
+def get_drinks(payload):
     try:
         drinks = Drink.query.all()
         drinks_short = [drink.short() for drink in drinks]
@@ -39,7 +47,7 @@ def get_drinks():
 
 @app.route("/drinks-detail", methods=["GET"])
 @requires_auth("get:drinks-detail")
-def get_drinks_detail():
+def get_drinks_detail(payload):
     try:
         drinks = Drink.query.all()
         drinks_long = [drink.long() for drink in drinks]
@@ -62,17 +70,18 @@ def get_drinks_detail():
 
 @app.route("/drinks", methods=["POST"])
 @requires_auth("post:drinks")
-def create_drink():
+def create_drink(payload):
     try:
         new_drink_data = request.get_json()
-        print(new_drink_data)
-        # new_drink = Drink(title="", recipe="")
-        # new_drink.insert()
-        # drink = Drink.query.get(new_drink.id)
-        # drink_long = drink.long()
+        title = new_drink_data.get("title", None)
+        recipe = json.dumps(new_drink_data.get("recipe", None))
+        new_drink = Drink(title=title, recipe=recipe)
+        new_drink.insert()
+        drink = Drink.query.get(new_drink.id)
+        drink_long = drink.long()
         return {
             "success": True,
-            "drinks": "drink_long"
+            "drinks": drink_long
         }
     except:
         rollback_db()
@@ -85,17 +94,26 @@ def create_drink():
 
 @app.route("/drinks/<int:id>", methods=["PATCH"])
 @requires_auth("patch:drinks")
-def update_drink(id):
+def update_drink(payload,id):
     drink = Drink.query.get(id)
     if drink == None:
         abort(404)
+    update_data = request.get_json()
+    title = update_data.get("title", None)
+    recipe = update_data.get("recipe", None)
+    if not (title or recipe):
+        abort(422)
     try:
-        update_data = request.get_json()
-        print(update_data)
-        # drink.title = update_data.
+        if title:
+            drink.title = title
+        if recipe:
+            drink.recipe = json.dumps(recipe)
+        drink.update()
+        updated_drink = Drink.query.get(id)
+        drink_long = updated_drink.long()
         return {
             "success": True,
-            "drinks": "drink_long"
+            "drinks": drink_long
         }
     except:
         rollback_db()
@@ -103,20 +121,12 @@ def update_drink(id):
     finally:
         close_db()
 
-'''
-@TODO implement endpoint
-    PATCH /drinks/<id>
-        it should update the corresponding row for <id>
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
-        or appropriate status code indicating reason for failure
-'''
 
 # DELETE /drinks/<id>
 
 @app.route("/drinks/<int:id>", methods=["DELETE"])
 @requires_auth("delete:drinks")
-def delete_drink(id):
+def delete_drink(payload,id):
     drink = Drink.query.get(id)
     if drink == None:
         abort(404)

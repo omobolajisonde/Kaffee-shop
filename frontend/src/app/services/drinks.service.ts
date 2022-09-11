@@ -85,7 +85,7 @@ export class DrinksService {
   getHeaders() {
     const header = {
       headers: new HttpHeaders()
-        .set('Authorization',  `Bearer ${this.auth.activeJWT()}`)
+        .set('Authorization',  `Bearer ${this.auth.activeJWT()}`).set("Content-Type", "application/json")
     };
     return header;
   }
