@@ -35,7 +35,7 @@ def get_token_auth_header():
         raise AuthError({
             "code": "missing_header",
             "description": "Expecting authorization header"
-        }, 400)
+        }, 401)
     auth_header_parts = auth_header.split(" ")
     if auth_header_parts[0].lower() != "bearer":
         raise AuthError({

@@ -31,8 +31,8 @@ def after_request(response):
 # GET /drinks
 
 @app.route("/drinks", methods=["GET"])
-@requires_auth("get:drinks")
-def get_drinks(payload):
+# @requires_auth("get:drinks")
+def get_drinks():
     try:
         drinks = Drink.query.all()
         drinks_short = [drink.short() for drink in drinks]
