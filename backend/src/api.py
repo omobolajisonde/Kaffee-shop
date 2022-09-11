@@ -59,29 +59,33 @@ def get_drinks_detail(payload):
         abort(500)
 
 
-'''
-@TODO implement endpoint
-    POST /drinks
-    returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
-        or appropriate status code indicating reason for failure
-'''
-
 # POST /drinks
 
 @app.route("/drinks", methods=["POST"])
 @requires_auth("post:drinks")
 def create_drink(payload):
+    new_drink_data = request.get_json()
+    title = new_drink_data.get("title", None)
+    recipe = new_drink_data.get("recipe", None)
+    if not title or not recipe:
+        abort(400)
+    for ingrdt in recipe:
+        name = ingrdt.get("name", None)
+        color = ingrdt.get("color", None)
+        parts = ingrdt.get("parts", None)
+        if not name or not color or not parts:
+            abort(400)
+    drink_exists = Drink.query.filter_by(title=title).one_or_none()
+    if drink_exists:
+        abort(409)
     try:
-        new_drink_data = request.get_json()
-        title = new_drink_data.get("title", None)
-        recipe = json.dumps(new_drink_data.get("recipe", None))
-        new_drink = Drink(title=title, recipe=recipe)
+        new_drink = Drink(title=title, recipe=json.dumps(recipe))
         new_drink.insert()
         drink = Drink.query.get(new_drink.id)
         drink_long = drink.long()
         return {
             "success": True,
-            "drinks": drink_long
+            "drinks": [drink_long]
         }
     except:
         rollback_db()
@@ -103,6 +107,13 @@ def update_drink(payload,id):
     recipe = update_data.get("recipe", None)
     if not (title or recipe):
         abort(422)
+    if recipe:
+        for ingrdt in recipe:
+            name = ingrdt.get("name", None)
+            color = ingrdt.get("color", None)
+            parts = ingrdt.get("parts", None)
+            if not name or not color or not parts:
+                abort(400)
     try:
         if title:
             drink.title = title
@@ -113,7 +124,7 @@ def update_drink(payload,id):
         drink_long = updated_drink.long()
         return {
             "success": True,
-            "drinks": drink_long
+            "drinks": [drink_long]
         }
     except:
         rollback_db()
@@ -132,19 +143,19 @@ def delete_drink(payload,id):
         abort(404)
     try:
         drink.delete()
-        return {
-            "success": True,
-            "delete": id
-        }
     except:
         rollback_db()
         abort(500)
     finally:
         close_db()
+    return {
+            "success": True,
+            "delete": id
+        }
 
 # Error Handling
 '''
-Example error handling for unprocessable entity
+Error handling for unprocessable entity
 '''
 
 
@@ -158,20 +169,16 @@ def unprocessable(error):
 
 
 '''
-@TODO implement error handlers using the @app.errorhandler(error) decorator
-    each error handler should return (with approprate messages):
-             jsonify({
-                    "success": False,
-                    "error": 404,
-                    "message": "resource not found"
-                    }), 404
-
+Error handling for resource not found
 '''
 
-'''
-@TODO implement error handler for 404
-    error handler should conform to general task above
-'''
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({
+        "success": False,
+        "error": 404,
+        "message": "resource not found"
+    }), 404
 
 
 '''
