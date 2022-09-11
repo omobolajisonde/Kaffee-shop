@@ -73,7 +73,7 @@ def check_permissions(permission, payload):
         raise AuthError({
             "code": "unauthorized",
             "description": "Permission not found!"
-        }, 401)
+        }, 403)
     return True
 
 '''
@@ -86,11 +86,18 @@ def check_permissions(permission, payload):
 def verify_decode_jwt(token):
     jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
     jwks = json.loads(jsonurl.read())
-    unverified_header = jwt.get_unverified_header(token)
+    try:
+        unverified_header = jwt.get_unverified_header(token)
+    except:
+        raise AuthError({
+            "code": "cannot_decode_token",
+            "description": "Error decoding token headers."
+        }, 401)
+
     rsa_key = {}
     if "kid" not in unverified_header:
         raise AuthError({
-            'code': 'Invalid header',
+            'code': 'invalid_header',
             'description': 'Authorization malformed.'
         }, 401)
     for key in jwks["keys"]:
@@ -137,11 +144,8 @@ def requires_auth(permission=''):
     def requires_auth_decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            try:
-                token = get_token_auth_header()
-                payload = verify_decode_jwt(token)
-            except:
-                abort(401)
+            token = get_token_auth_header()
+            payload = verify_decode_jwt(token)
             check_permissions(permission, payload)
             return f(payload, *args, **kwargs)
         return wrapper

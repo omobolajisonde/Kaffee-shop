@@ -36,12 +36,13 @@ def get_drinks(payload):
     try:
         drinks = Drink.query.all()
         drinks_short = [drink.short() for drink in drinks]
-        return {
+        
+    except:
+        abort(500)
+    return {
             "success": True,
             "drinks": drinks_short
         }
-    except:
-        abort(500)
     
 # GET /drinks-detail
 
@@ -51,12 +52,13 @@ def get_drinks_detail(payload):
     try:
         drinks = Drink.query.all()
         drinks_long = [drink.long() for drink in drinks]
-        return {
+        
+    except:
+        abort(500)
+    return {
             "success": True,
             "drinks": drinks_long
         }
-    except:
-        abort(500)
 
 
 # POST /drinks
@@ -83,15 +85,16 @@ def create_drink(payload):
         new_drink.insert()
         drink = Drink.query.get(new_drink.id)
         drink_long = drink.long()
-        return {
-            "success": True,
-            "drinks": [drink_long]
-        }
+        
     except:
         rollback_db()
         abort(500)
     finally:
         close_db()
+    return {
+            "success": True,
+            "drinks": [drink_long]
+        }
 
 
 # PATCH /drinks/<id>
@@ -122,15 +125,16 @@ def update_drink(payload,id):
         drink.update()
         updated_drink = Drink.query.get(id)
         drink_long = updated_drink.long()
-        return {
-            "success": True,
-            "drinks": [drink_long]
-        }
+        
     except:
         rollback_db()
         abort(500)
     finally:
         close_db()
+    return {
+            "success": True,
+            "drinks": [drink_long]
+        }
 
 
 # DELETE /drinks/<id>
@@ -155,18 +159,16 @@ def delete_drink(payload,id):
 
 # Error Handling
 '''
-Error handling for unprocessable entity
+Error handling for bad request
 '''
 
-
-@app.errorhandler(422)
-def unprocessable(error):
+@app.errorhandler(400)
+def bad_request(error):
     return jsonify({
         "success": False,
-        "error": 422,
-        "message": "unprocessable"
-    }), 422
-
+        "error": 400,
+        "message": "bad request"
+    }), 400
 
 '''
 Error handling for resource not found
@@ -180,14 +182,52 @@ def not_found(error):
         "message": "resource not found"
     }), 404
 
+'''
+Error handling for conflicts
+'''
+
+@app.errorhandler(409)
+def conflicts_found(error):
+    return jsonify({
+        "success": False,
+        "error": 409,
+        "message": "conflict in request"
+    }), 409
 
 '''
-@TODO implement error handler for AuthError
-    error handler should conform to general task above
+Error handling for unprocessable entity
+'''
+
+
+@app.errorhandler(422)
+def unprocessable(error):
+    return jsonify({
+        "success": False,
+        "error": 422,
+        "message": "unprocessable"
+    }), 422
+
+'''
+Error handling for server error
+'''
+
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return jsonify({
+        "success": False,
+        "error": 500,
+        "message": "internal server error"
+    }), 500
+
+
+
+
+'''
+Error handling for AuthError error
 '''
 @app.errorhandler(AuthError)
 def authentication_error(error):
-    print(error, error.status_code, error["status_code"])
     return jsonify({
         "success": False,
         "error": error.status_code,
