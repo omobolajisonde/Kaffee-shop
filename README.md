@@ -104,7 +104,7 @@ This project uses NPM to manage software dependencies. NPM Relies on the package
 npm install
 ```
 
-## Running Your Frontend in Dev Mode
+#### Running Your Frontend in Dev Mode
 
 Ionic ships with a useful development server which detects changes and transpiles as you work. The application is then accessible through the browser on a localhost port. To run the development server, cd into the `frontend` directory and run:
 
@@ -116,3 +116,11 @@ ionic serve
 > [Checkout the Ionic docs to learn more](https://ionicframework.com/docs/cli/commands/build)
 
 [View the README.md within ./frontend for more details.](./frontend/README.md)
+
+## Deployment N/A
+
+## Author
+[Sonde Omobolaji](https://github.com/omobolajisonde)
+
+## Acknowledgements
+My awesome tutor [Gabriel Ruttner](https://www.linkedin.com/in/gruttner/) and the entire team at Udacity.
