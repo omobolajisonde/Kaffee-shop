@@ -4,6 +4,8 @@
 
 Udacity's new digitally enabled café for students to order drinks, socialize, and study hard.
 
+![homepage](./home.png)
+
 Built as a project in the [Udacity's Full Stack web developer Nanodegree](https://www.udacity.com/course/full-stack-web-developer-nanodegree--nd0044)
 
 All backend code follows [PEP8 style guidelines](https://www.python.org/dev/peps/pep-0008/).
